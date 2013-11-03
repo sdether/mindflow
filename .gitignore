@@ -1,0 +1,13 @@
+.project
+*~
+output/*
+*.diff
+output-min/*
+__*
+.#*
+config/
+log/
+.idea/workspace.xml
+.idea/tasks.xml
+.DS_Store
+.cache

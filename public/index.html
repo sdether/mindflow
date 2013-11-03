@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mind Flow</title>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="js/viz.js"></script>
+  <script>
+    $(document).ready(function() {
+
+      var change = 0;
+
+      function update(lastChange) {
+        //console.log(change +' ?= '+lastChange);
+        if(change != lastChange) {
+          return;
+        }
+        console.log("change");
+        try {
+          var code = $("#code").val();
+          var result = Viz(code, "svg");
+          if(result.indexOf("Error") == 0) {
+            return;
+          }
+          $("#output").html(result);
+        } catch(e) {
+          console.log(e);
+        }
+      }
+
+      $("#code").bind('input propertychange', function() {
+        change++;
+        //console.log(change);
+        var lastChange = change;
+        setTimeout(function() {
+            update(lastChange)
+          },
+          500
+        );
+      });
+      update(change);
+    });
+  </script>
+</head>
+<body>
+<div>
+  <textarea id="code" cols="60" rows="10">
+digraph {
+  hello -> world
+}
+  </textarea>
+</div>
+<div id="output"></div>
+</body>
+</html>
