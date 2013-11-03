@@ -6,36 +6,123 @@
   <script src="js/viz.js"></script>
   <script>
     $(document).ready(function() {
+      var $saved = $("#saved");
+      var $name = $("#name");
+      var $code = $("#code");
+      var $add = $("#add");
+      var $delete = $("#delete");
+      var $output = $("#output");
+      var selectedName = "";
+      var selectedCode = "";
+      var files = [];
+
+      function loadFiles() {
+        files = [];
+        $saved.html("");
+        for(var key in localStorage) {
+          files.push(key);
+          $saved.append("<option key='" + key + "'>" + key + "</option>");
+        }
+        checkDelete();
+      }
+
+      function save(key, value) {
+        localStorage.setItem(key, value);
+        if(key == selectedName) {
+          return;
+        }
+        loadFiles();
+      }
+
+      function load(key) {
+        var code = localStorage.getItem(key);
+        $name.val(key);
+        $code.val(code);
+        selectedName = key;
+        $output.html("");
+        update(change);
+      }
+
+      function checkDelete() {
+        if(files.length > 1) {
+          $delete.prop("disabled",false);
+        } else {
+          $delete.prop("disabled",true);
+        }
+      }
 
       var change = 0;
 
       function update(lastChange) {
-        //console.log(change +' ?= '+lastChange);
         if(change != lastChange) {
           return;
         }
         console.log("change");
         try {
-          var code = $("#code").val();
+          var code = $code.val();
+          save($name.val(), code);
           var result = Viz(code, "svg");
           if(result.indexOf("Error") == 0) {
             return;
           }
-          $("#output").html(result);
+          $output.html(result);
         } catch(e) {
           console.log(e);
         }
       }
 
-      $("#code").bind('input propertychange', function() {
+      loadFiles();
+      if(files.length == 0) {
+        var key = "Hello World";
+        var value = "digraph {\r\n  hello -> world\r\n  {rank=same;hello;world}\r\n}\r\n";
+        $name.val(key);
+        $code.val(value);
+        save(key, value);
+      } else {
+        load(files[0]);
+      }
+
+      $code.bind('input propertychange', function() {
         change++;
         //console.log(change);
         var lastChange = change;
+
         setTimeout(function() {
             update(lastChange)
           },
           500
         );
+      });
+      $delete.click(function() {
+        localStorage.removeItem(selectedName);
+        loadFiles();
+        load(files[0]);
+      });
+      $add.click(function() {
+        var key = "Untitled";
+        localStorage.setItem(key,"");
+        loadFiles();
+        load(key);
+        $saved.val(key);
+      });
+      $saved.change(function() {
+        var key = this.value;
+        console.log("selected: "+key);
+        if(key == $name.val()) {
+          return;
+        }
+        load(key);
+      });
+      $name.change(function() {
+        var key = this.value;
+        console.log("renaming '"+selectedName+"' to '"+key+"'");
+        if(key == selectedName) {
+          return;
+        }
+        localStorage.removeItem(selectedName);
+        save(key, $code.val());
+        selectedName = key;
+        $saved.val(key);
       });
       update(change);
     });
@@ -43,10 +130,18 @@
 </head>
 <body>
 <div>
+  <input id="name" value="Hello World"/>
+  <select id="saved">
+  </select>
+  <button id="delete" disabled="true">Delete</button>
+  <button id="add" enabled="false">Add</button>
+</div>
+<div>
   <textarea id="code" cols="60" rows="10">
-digraph {
-  hello -> world
-}
+    digraph {
+    hello -> world
+    {rank=same;hello;world}
+    }
   </textarea>
 </div>
 <div id="output"></div>
