@@ -20,6 +20,10 @@
         files = [];
         $saved.html("");
         for(var key in localStorage) {
+          if(key.indexOf("mindflow.") != 0) {
+            continue;
+          }
+          key = key.substring(9);
           files.push(key);
           $saved.append("<option key='" + key + "'>" + key + "</option>");
         }
@@ -27,7 +31,7 @@
       }
 
       function save(key, value) {
-        localStorage.setItem(key, value);
+        localStorage.setItem("mindflow."+key, value);
         if(key == selectedName) {
           return;
         }
@@ -35,7 +39,7 @@
       }
 
       function load(key) {
-        var code = localStorage.getItem(key);
+        var code = localStorage.getItem("mindflow."+key);
         $name.val(key);
         $code.val(code);
         selectedName = key;
@@ -94,13 +98,13 @@
         );
       });
       $delete.click(function() {
-        localStorage.removeItem(selectedName);
+        localStorage.removeItem("mindflow."+selectedName);
         loadFiles();
         load(files[0]);
       });
       $add.click(function() {
         var key = "Untitled";
-        localStorage.setItem(key,"");
+        localStorage.setItem("mindflow."+key,"");
         loadFiles();
         load(key);
         $saved.val(key);
@@ -119,7 +123,7 @@
         if(key == selectedName) {
           return;
         }
-        localStorage.removeItem(selectedName);
+        localStorage.removeItem("mindflow."+selectedName);
         save(key, $code.val());
         selectedName = key;
         $saved.val(key);
