@@ -3,6 +3,8 @@
 <head>
   <title>Mind Flow</title>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/redmond/jquery-ui.min.css" rel="stylesheet" type="text/css">
   <script src="js/viz.js"></script>
   <script>
     $(document).ready(function() {
@@ -13,7 +15,6 @@
       var $delete = $("#delete");
       var $output = $("#output");
       var selectedName = "";
-      var selectedCode = "";
       var files = [];
 
       function loadFiles() {
@@ -31,7 +32,7 @@
       }
 
       function save(key, value) {
-        localStorage.setItem("mindflow."+key, value);
+        localStorage.setItem("mindflow." + key, value);
         if(key == selectedName) {
           return;
         }
@@ -39,7 +40,7 @@
       }
 
       function load(key) {
-        var code = localStorage.getItem("mindflow."+key);
+        var code = localStorage.getItem("mindflow." + key);
         $name.val(key);
         $code.val(code);
         selectedName = key;
@@ -49,16 +50,16 @@
 
       function checkDelete() {
         if(files.length > 1) {
-          $delete.prop("disabled",false);
+          $delete.prop("disabled", false);
         } else {
-          $delete.prop("disabled",true);
+          $delete.prop("disabled", true);
         }
       }
 
       var change = 0;
 
       function update(lastChange) {
-        if(change != lastChange) {
+        if(lastChange && change != lastChange) {
           return;
         }
         console.log("change");
@@ -69,7 +70,14 @@
           if(result.indexOf("Error") == 0) {
             return;
           }
+          $output.width = $(window).width() * 0.95;
+          $output.height = $(window).height() * 0.95;
           $output.html(result);
+          var $svg = $("#output svg");
+          var h = $svg.prop("viewBox").baseVal.height;
+          var w = $svg.prop("viewBox").baseVal.width;
+          $svg.attr("height", $(window).height() * 0.95);
+          $svg.attr("width", $(window).width() * 0.95);
         } catch(e) {
           console.log(e);
         }
@@ -86,9 +94,11 @@
         load(files[0]);
       }
 
+      $(window).resize(function() {
+        update();
+      });
       $code.bind('input propertychange', function() {
         change++;
-        //console.log(change);
         var lastChange = change;
 
         setTimeout(function() {
@@ -98,20 +108,20 @@
         );
       });
       $delete.click(function() {
-        localStorage.removeItem("mindflow."+selectedName);
+        localStorage.removeItem("mindflow." + selectedName);
         loadFiles();
         load(files[0]);
       });
       $add.click(function() {
         var key = "Untitled";
-        localStorage.setItem("mindflow."+key,"");
+        localStorage.setItem("mindflow." + key, "");
         loadFiles();
         load(key);
         $saved.val(key);
       });
       $saved.change(function() {
         var key = this.value;
-        console.log("selected: "+key);
+        console.log("selected: " + key);
         if(key == $name.val()) {
           return;
         }
@@ -119,35 +129,73 @@
       });
       $name.change(function() {
         var key = this.value;
-        console.log("renaming '"+selectedName+"' to '"+key+"'");
+        console.log("renaming '" + selectedName + "' to '" + key + "'");
         if(key == selectedName) {
           return;
         }
-        localStorage.removeItem("mindflow."+selectedName);
+        localStorage.removeItem("mindflow." + selectedName);
         save(key, $code.val());
         selectedName = key;
         $saved.val(key);
       });
-      update(change);
+      $("#panel").draggable().resizable({handles: "se"});
+      update();
     });
   </script>
+  <style>
+    #output {
+      margin: 0;
+    }
+
+    #output svg {
+      margin: 0;
+    }
+
+    #panel {
+      position: absolute;
+      z-index: 100;
+      background-color: #fff;
+      border: solid;
+      border-color: #000;
+      top: 50px;
+      left: 50px;
+      width: 600px;
+      height: 400px;
+      padding: 1em;
+    }
+
+    #code {
+      width: 100%;
+      height: 100%;
+    }
+
+    #codediv {
+      width: 100%;
+      height: 95%;
+    }
+  </style>
 </head>
 <body>
-<div>
-  <input id="name" value="Hello World"/>
-  <select id="saved">
-  </select>
-  <button id="delete" disabled="true">Delete</button>
-  <button id="add" enabled="false">Add</button>
-</div>
-<div>
-  <textarea id="code" cols="60" rows="10">
-    digraph {
-    hello -> world
-    {rank=same;hello;world}
-    }
-  </textarea>
-</div>
 <div id="output"></div>
+<div id="panel" class="ui-draggable ui-resizable">
+  <div>
+    <input id="name" value="Hello World"/>
+    <select id="saved">
+    </select>
+    <button id="delete" disabled="true">Delete</button>
+    <button id="add" enabled="false">Add</button>
+  </div>
+  <div id="codediv">
+    <textarea id="code">
+      digraph {
+      hello -> world
+      {rank=same;hello;world}
+      }
+    </textarea>
+  </div>
+  <div class="ui-resizable-handle ui-resizable-e" unselectable="on"></div>
+  <div class="ui-resizable-handle ui-resizable-s" unselectable="on"></div>
+  <div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" unselectable="on" style="z-index: 1001;"></div>
+</div>
 </body>
 </html>
